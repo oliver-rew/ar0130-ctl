@@ -1,17 +1,10 @@
-#include "camera-i2c.h"
+#include "main.h"
 
-int main(int argc, char *argv[])
-{
-	(void)argc;
-	(void)argv;
-
-	i2cWrite(0x300a, 0xbabe);
-	i2cDump();
-}
+char *filename = (char *)"/dev/i2c-2";
+int file_i2c;
 
 int i2cDump()
 {
-
 	if ((file_i2c = open(filename, O_RDWR)) < 0)
 	{
 		//ERROR HANDLING: you can check errno to see what went wrong
@@ -113,6 +106,7 @@ int i2cWrite(uint16_t reg, uint16_t val)
 
 uint16_t i2cRead(uint16_t reg)
 {
+	//map the i2c device file
 	if ((file_i2c = open(filename, O_RDWR)) < 0)
 	{
 		//ERROR HANDLING: you can check errno to see what went wrong
@@ -133,8 +127,10 @@ uint16_t i2cRead(uint16_t reg)
 	struct i2c_msg iomsg[2];
 	uint8_t buf[2];
 	uint8_t r[2];
+	uint16_t val;
 	int rc;
 
+	//set register
 	r[0] = reg >> 8;
 	r[1] = reg & 0x00ff;
 
@@ -150,19 +146,20 @@ uint16_t i2cRead(uint16_t reg)
 	iomsg[1].buf = buf;
 	iomsg[1].len = 2;
 
-	//set the message
+	//set the messages
 	msgset.msgs = iomsg;
 	msgset.nmsgs = 2;
 
 	rc = ioctl(file_i2c, I2C_RDWR, &msgset);
-	if (rc < 0) 
+	if (rc < 0)
 	{
 		printf("ioctl error return code %d \n", rc);
 		return -1;
 	}
 
-	uint16_t val = (buf[0] << 8) | buf[1];
+	//save return buffer into value
+	val = (buf[0] << 8) | buf[1];
 
+	//TODO: I should be writing val to a pointer and returning an error
 	return val;
-
 }
