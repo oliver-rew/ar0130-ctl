@@ -9,4 +9,3 @@
 #include <time.h>
 #include <string.h>
 
-#include "camera-i2c.h"
